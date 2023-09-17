@@ -1,4 +1,8 @@
-# WSDL TSClient
+# WSDL Two TS
+
+Forked from author:
+
+Daniel Derevjanik <daniel.derevjanik@gmail.com>
 
 [![travis-status](https://travis-ci.org/dderevjanik/wsdl-tsclient.svg?branch=master)](https://travis-ci.org/dderevjanik/wsdl-tsclient)
 ![license](https://img.shields.io/npm/l/wsdl-tsclient)

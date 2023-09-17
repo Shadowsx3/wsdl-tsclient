@@ -110,6 +110,11 @@ function generateDefinitionFile(
             definitionProperties.push(createProperty(prop.name, prop.ref.name, prop.sourceName, prop.isArray));
         }
     }
+    definitionProperties.push({
+        kind: StructureKind.PropertySignature,
+        name: "[arg: string]",
+        type: "any",
+    });
 
     defFile.addImportDeclarations(definitionImports);
     defFile.addStatements([
@@ -223,7 +228,17 @@ export async function generate(
                             name: "callback",
                             type: `(err: any, result: ${
                                 method.returnDefinition ? method.returnDefinition.name : "unknown"
-                            }, rawResponse: any, soapHeader: any, rawRequest: any) => void`, // TODO: Use ts-morph to generate proper type
+                            }, rawResponse: any, soapHeader: {[k: string]: any; }, rawRequest: any, mtomAttachments: any) => any`, // TODO: Use ts-morph to generate proper type
+                        },
+                        {
+                            name: "options",
+                            type: "any",
+                            hasQuestionToken: true,
+                        },
+                        {
+                            name: "extraHeaders",
+                            type: "{[k: string]: any; }",
+                            hasQuestionToken: true,
                         },
                     ],
                     returnType: "void",
@@ -299,10 +314,20 @@ export async function generate(
                             name: camelcase(method.paramName),
                             type: method.paramDefinition ? method.paramDefinition.name : "{}",
                         },
+                        {
+                            name: "options",
+                            type: "any",
+                            hasQuestionToken: true,
+                        },
+                        {
+                            name: "extraHeaders",
+                            type: "{[k: string]: any; }",
+                            hasQuestionToken: true,
+                        },
                     ],
                     returnType: `Promise<[result: ${
                         method.returnDefinition ? method.returnDefinition.name : "unknown"
-                    }, rawResponse: any, soapHeader: any, rawRequest: any]>`,
+                    }, rawResponse: any, soapHeader: {[k: string]: any; }, rawRequest: any, mtomAttachments: any]>`,
                 })),
             },
         ]);

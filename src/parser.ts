@@ -25,6 +25,21 @@ type VisitedDefinition = {
     definition: Definition;
 };
 
+const getType = (type: string): string =>
+    ({
+        int: "number",
+        integer: "number",
+        short: "number",
+        long: "number",
+        double: "number",
+        float: "number",
+        decimal: "number",
+        bool: "boolean",
+        boolean: "boolean",
+        dateTime: "Date",
+        date: "Date",
+    }[type.split(":").pop()] || "string");
+
 function findReferenceDefiniton(visited: Array<VisitedDefinition>, definitionParts: object) {
     return visited.find((def) => def.parts === definitionParts);
 }
@@ -95,7 +110,7 @@ function parseDefinition(
                             name: stripedPropName,
                             sourceName: propName,
                             description: type,
-                            type: "string",
+                            type: getType(type),
                             isArray: true,
                         });
                     } else if (type instanceof ComplexTypeElement) {
@@ -155,7 +170,7 @@ function parseDefinition(
                             name: propName,
                             sourceName: propName,
                             description: type,
-                            type: "string",
+                            type: getType(type),
                             isArray: false,
                         });
                     } else if (type instanceof ComplexTypeElement) {

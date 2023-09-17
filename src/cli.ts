@@ -4,6 +4,8 @@ import path from "path";
 import { Logger } from "./utils/logger";
 import { parseAndGenerate, Options } from "./index";
 import packageJson from "../package.json";
+import { glob } from "glob";
+import { promisify } from "util";
 
 const conf = yargs(process.argv.slice(2))
     .version(packageJson.version)
@@ -125,26 +127,40 @@ if (conf._ === undefined || conf._.length === 0) {
         const outDir = path.resolve(conf.o);
 
         let errorsCount = 0;
-        const matches = conf._ as string[];
+        const filePatterns = conf._ as string[];
 
-        if (matches.length > 1) {
-            Logger.debug(matches.map((m) => path.resolve(m)).join("\n"));
-            Logger.log(`Found ${matches.length} wsdl files`);
-        }
-        for (const match of matches) {
-            const wsdlPath = path.resolve(match);
-            const wsdlName = path.basename(wsdlPath);
-            Logger.log(`Generating soap client from "${wsdlName}"`);
-            try {
-                await parseAndGenerate(wsdlPath, path.join(outDir), options);
-            } catch (err) {
-                Logger.error(`Error occured while generating client "${wsdlName}"`);
-                Logger.error(`\t${err}`);
-                errorsCount += 1;
+        try {
+            const matches = await glob(filePatterns);
+
+            if (matches.length === 0) {
+                Logger.error("No WSDL files found");
+                process.exit(1);
             }
-        }
-        if (errorsCount) {
-            Logger.error(`${errorsCount} Errors occured!`);
+
+            if (matches.length > 1) {
+                Logger.debug(matches.map((m) => path.resolve(m)).join("\n"));
+                Logger.log(`Found ${matches.length} WSDL files`);
+            }
+
+            for (const match of matches) {
+                const wsdlPath = path.resolve(match);
+                const wsdlName = path.basename(wsdlPath);
+                Logger.log(`Generating SOAP client from "${wsdlName}"`);
+                try {
+                    await parseAndGenerate(wsdlPath, path.join(outDir), options);
+                } catch (err) {
+                    Logger.error(`Error occurred while generating client "${wsdlName}"`);
+                    Logger.error(`\t${err}`);
+                    errorsCount += 1;
+                }
+            }
+
+            if (errorsCount) {
+                Logger.error(`${errorsCount} Errors occurred!`);
+                process.exit(1);
+            }
+        } catch (err) {
+            Logger.error(`Error while searching for WSDL files: ${err}`);
             process.exit(1);
         }
     }
