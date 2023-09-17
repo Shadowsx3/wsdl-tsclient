@@ -110,13 +110,15 @@ function generateDefinitionFile(
             definitionProperties.push(createProperty(prop.name, prop.ref.name, prop.sourceName, prop.isArray));
         }
     }
+    defFile.addImportDeclarations(definitionImports);
+
     definitionProperties.push({
         kind: StructureKind.PropertySignature,
         name: "[arg: string]",
+        docs: ["Hold additional properties"],
         type: "any",
     });
 
-    defFile.addImportDeclarations(definitionImports);
     defFile.addStatements([
         {
             leadingTrivia: (writer) => writer.newLine(),

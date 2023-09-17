@@ -138,12 +138,13 @@ function generateDefinitionFile(project, definition, defDir, stack, generated, o
             definitionProperties.push(createProperty(prop.name, prop.ref.name, prop.sourceName, prop.isArray));
         }
     }
+    defFile.addImportDeclarations(definitionImports);
     definitionProperties.push({
         kind: ts_morph_1.StructureKind.PropertySignature,
         name: "[arg: string]",
+        docs: ["Hold additional properties"],
         type: "any",
     });
-    defFile.addImportDeclarations(definitionImports);
     defFile.addStatements([
         {
             leadingTrivia: function (writer) { return writer.newLine(); },

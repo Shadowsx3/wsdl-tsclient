@@ -34,7 +34,7 @@
         "wsdl-client",
         "typescript"
     ],
-    "author": "",
+    "author": "Manuel Buslon",
     "license": "MIT",
     "bugs": {
         "url": "https://github.com/dderevjanik/wsdl-tsclient/issues"
