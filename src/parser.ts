@@ -98,6 +98,8 @@ function parseDefinition(
             Object.entries(defParts).forEach(([propName, type]) => {
                 if (propName === "targetNSAlias") {
                     definition.docs.push(`@targetNSAlias \`${type}\``);
+                } else if (propName === "typeName") {
+                    // Skip
                 } else if (propName === "targetNamespace") {
                     definition.docs.push(`@targetNamespace \`${type}\``);
                 } else if (propName.endsWith("[]")) {
@@ -132,7 +134,7 @@ function parseDefinition(
                             definition.properties.push({
                                 kind: "REFERENCE",
                                 name: stripedPropName,
-                                sourceName: propName,
+                                sourceName: type.typeName,
                                 ref: visited.definition,
                                 isArray: true,
                             });
@@ -141,7 +143,7 @@ function parseDefinition(
                                 const subDefinition = parseDefinition(
                                     parsedWsdl,
                                     options,
-                                    stripedPropName,
+                                    type.typeName,
                                     type,
                                     [...stack, propName],
                                     visitedDefs
@@ -149,7 +151,7 @@ function parseDefinition(
                                 definition.properties.push({
                                     kind: "REFERENCE",
                                     name: stripedPropName,
-                                    sourceName: propName,
+                                    sourceName: type.typeName,
                                     ref: subDefinition,
                                     isArray: true,
                                 });
@@ -192,7 +194,7 @@ function parseDefinition(
                             definition.properties.push({
                                 kind: "REFERENCE",
                                 name: propName,
-                                sourceName: propName,
+                                sourceName: type.typeName,
                                 description: "",
                                 ref: reference.definition,
                                 isArray: false,
@@ -202,7 +204,7 @@ function parseDefinition(
                                 const subDefinition = parseDefinition(
                                     parsedWsdl,
                                     options,
-                                    propName,
+                                    type.typeName,
                                     type,
                                     [...stack, propName],
                                     visitedDefs
@@ -210,7 +212,7 @@ function parseDefinition(
                                 definition.properties.push({
                                     kind: "REFERENCE",
                                     name: propName,
-                                    sourceName: propName,
+                                    sourceName: type.typeName,
                                     ref: subDefinition,
                                     isArray: false,
                                 });

@@ -157,6 +157,9 @@ function parseDefinition(parsedWsdl, options, name, defParts, stack, visitedDefs
                 if (propName === "targetNSAlias") {
                     definition.docs.push("@targetNSAlias `".concat(type, "`"));
                 }
+                else if (propName === "typeName") {
+                    // Skip
+                }
                 else if (propName === "targetNamespace") {
                     definition.docs.push("@targetNamespace `".concat(type, "`"));
                 }
@@ -194,18 +197,18 @@ function parseDefinition(parsedWsdl, options, name, defParts, stack, visitedDefs
                             definition.properties.push({
                                 kind: "REFERENCE",
                                 name: stripedPropName,
-                                sourceName: propName,
+                                sourceName: type.typeName,
                                 ref: visited.definition,
                                 isArray: true,
                             });
                         }
                         else {
                             try {
-                                var subDefinition = parseDefinition(parsedWsdl, options, stripedPropName, type, __spreadArray(__spreadArray([], stack, true), [propName], false), visitedDefs);
+                                var subDefinition = parseDefinition(parsedWsdl, options, type.typeName, type, __spreadArray(__spreadArray([], stack, true), [propName], false), visitedDefs);
                                 definition.properties.push({
                                     kind: "REFERENCE",
                                     name: stripedPropName,
-                                    sourceName: propName,
+                                    sourceName: type.typeName,
                                     ref: subDefinition,
                                     isArray: true,
                                 });
@@ -250,7 +253,7 @@ function parseDefinition(parsedWsdl, options, name, defParts, stack, visitedDefs
                             definition.properties.push({
                                 kind: "REFERENCE",
                                 name: propName,
-                                sourceName: propName,
+                                sourceName: type.typeName,
                                 description: "",
                                 ref: reference.definition,
                                 isArray: false,
@@ -258,11 +261,11 @@ function parseDefinition(parsedWsdl, options, name, defParts, stack, visitedDefs
                         }
                         else {
                             try {
-                                var subDefinition = parseDefinition(parsedWsdl, options, propName, type, __spreadArray(__spreadArray([], stack, true), [propName], false), visitedDefs);
+                                var subDefinition = parseDefinition(parsedWsdl, options, type.typeName, type, __spreadArray(__spreadArray([], stack, true), [propName], false), visitedDefs);
                                 definition.properties.push({
                                     kind: "REFERENCE",
                                     name: propName,
-                                    sourceName: propName,
+                                    sourceName: type.typeName,
                                     ref: subDefinition,
                                     isArray: false,
                                 });
