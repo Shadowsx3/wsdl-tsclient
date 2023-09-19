@@ -42,6 +42,10 @@ export interface Method {
     paramDefinition: null | Definition;
     /** Result type (OutputMessage) */
     returnDefinition: null | Definition;
+    /** First param header type (InputMessage) */
+    inputHeaderDefinition: null | Definition;
+    /** Result header type (OutputMessage) */
+    outputHeaderDefinition: null | Definition;
     /** Fault type (FaultMessage) */
     faultDefinition: null | Definition;
 }
@@ -119,7 +123,7 @@ export class ParsedWsdl {
 
     /** Find already parsed definition by it's name */
     findDefinition(definitionName: string): Definition {
-        return this.definitions.find((def) => def.name === definitionName);
+        return this.definitions.find((def) => def.sourceName === definitionName);
     }
 
     /**

@@ -217,6 +217,52 @@ export async function generate(
                         method.returnDefinition.name
                     );
                 }
+                if (method.inputHeaderDefinition !== null) {
+                    if (!allDefinitions.includes(method.inputHeaderDefinition)) {
+                        // Definition is not generated
+                        generateDefinitionFile(
+                            project,
+                            method.inputHeaderDefinition,
+                            defDir,
+                            [method.inputHeaderDefinition.name],
+                            allDefinitions,
+                            mergedOptions
+                        );
+                        addSafeImport(
+                            clientImports,
+                            `./definitions/${method.inputHeaderDefinition.name}`,
+                            method.inputHeaderDefinition.name
+                        );
+                    }
+                    addSafeImport(
+                        portImports,
+                        `../definitions/${method.inputHeaderDefinition.name}`,
+                        method.inputHeaderDefinition.name
+                    );
+                }
+                if (method.outputHeaderDefinition !== null) {
+                    if (!allDefinitions.includes(method.outputHeaderDefinition)) {
+                        // Definition is not generated
+                        generateDefinitionFile(
+                            project,
+                            method.outputHeaderDefinition,
+                            defDir,
+                            [method.outputHeaderDefinition.name],
+                            allDefinitions,
+                            mergedOptions
+                        );
+                        addSafeImport(
+                            clientImports,
+                            `./definitions/${method.outputHeaderDefinition.name}`,
+                            method.outputHeaderDefinition.name
+                        );
+                    }
+                    addSafeImport(
+                        portImports,
+                        `../definitions/${method.outputHeaderDefinition.name}`,
+                        method.outputHeaderDefinition.name
+                    );
+                }
                 if (method.faultDefinition !== null) {
                     if (!allDefinitions.includes(method.faultDefinition)) {
                         // Definition is not generated
@@ -253,7 +299,11 @@ export async function generate(
                             name: "callback",
                             type: `(err: any, result: ${
                                 method.returnDefinition ? method.returnDefinition.name : "unknown"
-                            }, rawResponse: any, soapHeader: {[k: string]: any; }, rawRequest: any, mtomAttachments: any) => any`, // TODO: Use ts-morph to generate proper type
+                            }, rawResponse: any, soapHeader: ${
+                                method.outputHeaderDefinition
+                                    ? method.outputHeaderDefinition.name
+                                    : "{[k: string]: any; }"
+                            }, rawRequest: any, mtomAttachments: any) => any`, // TODO: Use ts-morph to generate proper type
                         },
                         {
                             name: "options",
@@ -262,7 +312,9 @@ export async function generate(
                         },
                         {
                             name: "extraHeaders",
-                            type: "{[k: string]: any; }",
+                            type: method.inputHeaderDefinition
+                                ? method.inputHeaderDefinition.name
+                                : "{[k: string]: any; }",
                             hasQuestionToken: true,
                         },
                     ],
@@ -346,13 +398,17 @@ export async function generate(
                         },
                         {
                             name: "extraHeaders",
-                            type: "{[k: string]: any; }",
+                            type: method.inputHeaderDefinition
+                                ? method.inputHeaderDefinition.name
+                                : "{[k: string]: any; }",
                             hasQuestionToken: true,
                         },
                     ],
                     returnType: `Promise<[result: ${
                         method.returnDefinition ? method.returnDefinition.name : "unknown"
-                    }, rawResponse: any, soapHeader: {[k: string]: any; }, rawRequest: any, mtomAttachments: any]>`,
+                    }, rawResponse: any, soapHeader: ${
+                        method.outputHeaderDefinition ? method.outputHeaderDefinition.name : "{[k: string]: any; }"
+                    }, rawRequest: any, mtomAttachments: any]>`,
                 })),
             },
         ]);

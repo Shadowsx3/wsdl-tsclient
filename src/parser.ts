@@ -283,17 +283,52 @@ export async function parseWsdl(wsdlPath: string, options: Partial<ParserOptions
                             // TODO: Deduplicate code below by refactoring it to external function. Is it even possible ?
                             let paramName = "request";
                             let inputDefinition: Definition = null; // default type
+                            let inputHeaderDefinition: Definition = null; // default type
                             if (method.input) {
                                 if (method.input.$name) {
                                     paramName = method.input.$name;
+                                }
+                                if (method.inputSoap.header) {
+                                    const headerMessage = wsdl.definitions.messages[method.inputSoap.header.$name];
+                                    if (headerMessage.element) {
+                                        // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
+                                        const typeName = headerMessage.element.$type ?? headerMessage.element.$name;
+                                        typeName.split(":").pop();
+                                        const type = parsedWsdl.findDefinition(typeName);
+                                        inputHeaderDefinition = type
+                                            ? type
+                                            : parseDefinition(
+                                                  parsedWsdl,
+                                                  mergedOptions,
+                                                  typeName,
+                                                  headerMessage.parts,
+                                                  [typeName],
+                                                  visitedDefinitions
+                                              );
+                                    } else if (headerMessage.parts) {
+                                        const type = parsedWsdl.findDefinition(method.inputSoap.header.$name);
+                                        inputHeaderDefinition = type
+                                            ? type
+                                            : parseDefinition(
+                                                  parsedWsdl,
+                                                  mergedOptions,
+                                                  method.inputSoap.header.$name,
+                                                  headerMessage.parts,
+                                                  [method.inputSoap.header.$name],
+                                                  visitedDefinitions
+                                              );
+                                    } else {
+                                        Logger.debug(
+                                            `Method '${serviceName}.${portName}.${methodName}' doesn't have any input header defined`
+                                        );
+                                    }
                                 }
                                 const inputMessage = wsdl.definitions.messages[method.input.$name];
                                 if (inputMessage.element) {
                                     // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
                                     const typeName = inputMessage.element.$type ?? inputMessage.element.$name;
-                                    const type = parsedWsdl.findDefinition(
-                                        inputMessage.element.$type ?? inputMessage.element.$name
-                                    );
+                                    typeName.split(":").pop();
+                                    const type = parsedWsdl.findDefinition(typeName);
                                     inputDefinition = type
                                         ? type
                                         : parseDefinition(
@@ -324,11 +359,48 @@ export async function parseWsdl(wsdlPath: string, options: Partial<ParserOptions
                             }
 
                             let outputDefinition: Definition = null; // default type, `{}` or `unknown` ?
+                            let outputHeaderDefinition: Definition = null;
                             if (method.output) {
+                                if (method.outputSoap.header) {
+                                    const headerMessage = wsdl.definitions.messages[method.outputSoap.header.$name];
+                                    if (headerMessage.element) {
+                                        // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
+                                        const typeName = headerMessage.element.$type ?? headerMessage.element.$name;
+                                        typeName.split(":").pop();
+                                        const type = parsedWsdl.findDefinition(typeName);
+                                        outputHeaderDefinition = type
+                                            ? type
+                                            : parseDefinition(
+                                                  parsedWsdl,
+                                                  mergedOptions,
+                                                  typeName,
+                                                  headerMessage.parts,
+                                                  [typeName],
+                                                  visitedDefinitions
+                                              );
+                                    } else if (headerMessage.parts) {
+                                        const type = parsedWsdl.findDefinition(method.outputSoap.header.$name);
+                                        outputHeaderDefinition = type
+                                            ? type
+                                            : parseDefinition(
+                                                  parsedWsdl,
+                                                  mergedOptions,
+                                                  method.outputSoap.header.$name,
+                                                  headerMessage.parts,
+                                                  [method.outputSoap.header.$name],
+                                                  visitedDefinitions
+                                              );
+                                    } else {
+                                        Logger.debug(
+                                            `Method '${serviceName}.${portName}.${methodName}' doesn't have any input header defined`
+                                        );
+                                    }
+                                }
                                 const outputMessage = wsdl.definitions.messages[method.output.$name];
                                 if (outputMessage.element) {
                                     // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
                                     const typeName = outputMessage.element.$type ?? outputMessage.element.$name;
+                                    typeName.split(":").pop();
                                     const type = parsedWsdl.findDefinition(typeName);
                                     outputDefinition = type
                                         ? type
@@ -361,9 +433,8 @@ export async function parseWsdl(wsdlPath: string, options: Partial<ParserOptions
                                 if (faultMessage.element) {
                                     // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
                                     const typeName = faultMessage.element.$type ?? faultMessage.element.$name;
-                                    const type = parsedWsdl.findDefinition(
-                                        faultMessage.element.$type ?? faultMessage.element.$name
-                                    );
+                                    typeName.split(":").pop();
+                                    const type = parsedWsdl.findDefinition(typeName);
                                     faultDefinition = type
                                         ? type
                                         : parseDefinition(
@@ -401,6 +472,8 @@ export async function parseWsdl(wsdlPath: string, options: Partial<ParserOptions
                                     : camelParamName,
                                 paramDefinition: inputDefinition, // TODO: Use string from generated definition files
                                 returnDefinition: outputDefinition, // TODO: Use string from generated definition files
+                                inputHeaderDefinition,
+                                outputHeaderDefinition,
                                 faultDefinition,
                             };
                             portMethods.push(portMethod);

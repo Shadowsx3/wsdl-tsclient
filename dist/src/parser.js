@@ -331,15 +331,38 @@ function parseWsdl(wsdlPath, options) {
                                     // TODO: Deduplicate code below by refactoring it to external function. Is it even possible ?
                                     var paramName = "request";
                                     var inputDefinition = null; // default type
+                                    var inputHeaderDefinition = null; // default type
                                     if (method.input) {
                                         if (method.input.$name) {
                                             paramName = method.input.$name;
                                         }
+                                        if (method.inputSoap.header) {
+                                            var headerMessage = wsdl.definitions.messages[method.inputSoap.header.$name];
+                                            if (headerMessage.element) {
+                                                // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
+                                                var typeName = (_a = headerMessage.element.$type) !== null && _a !== void 0 ? _a : headerMessage.element.$name;
+                                                typeName.split(":").pop();
+                                                var type = parsedWsdl.findDefinition(typeName);
+                                                inputHeaderDefinition = type
+                                                    ? type
+                                                    : parseDefinition(parsedWsdl, mergedOptions, typeName, headerMessage.parts, [typeName], visitedDefinitions);
+                                            }
+                                            else if (headerMessage.parts) {
+                                                var type = parsedWsdl.findDefinition(method.inputSoap.header.$name);
+                                                inputHeaderDefinition = type
+                                                    ? type
+                                                    : parseDefinition(parsedWsdl, mergedOptions, method.inputSoap.header.$name, headerMessage.parts, [method.inputSoap.header.$name], visitedDefinitions);
+                                            }
+                                            else {
+                                                logger_1.Logger.debug("Method '".concat(serviceName, ".").concat(portName, ".").concat(methodName, "' doesn't have any input header defined"));
+                                            }
+                                        }
                                         var inputMessage = wsdl.definitions.messages[method.input.$name];
                                         if (inputMessage.element) {
                                             // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
-                                            var typeName = (_a = inputMessage.element.$type) !== null && _a !== void 0 ? _a : inputMessage.element.$name;
-                                            var type = parsedWsdl.findDefinition((_b = inputMessage.element.$type) !== null && _b !== void 0 ? _b : inputMessage.element.$name);
+                                            var typeName = (_b = inputMessage.element.$type) !== null && _b !== void 0 ? _b : inputMessage.element.$name;
+                                            typeName.split(":").pop();
+                                            var type = parsedWsdl.findDefinition(typeName);
                                             inputDefinition = type
                                                 ? type
                                                 : parseDefinition(parsedWsdl, mergedOptions, typeName, inputMessage.parts, [typeName], visitedDefinitions);
@@ -355,11 +378,34 @@ function parseWsdl(wsdlPath, options) {
                                         }
                                     }
                                     var outputDefinition = null; // default type, `{}` or `unknown` ?
+                                    var outputHeaderDefinition = null;
                                     if (method.output) {
+                                        if (method.outputSoap.header) {
+                                            var headerMessage = wsdl.definitions.messages[method.outputSoap.header.$name];
+                                            if (headerMessage.element) {
+                                                // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
+                                                var typeName = (_c = headerMessage.element.$type) !== null && _c !== void 0 ? _c : headerMessage.element.$name;
+                                                typeName.split(":").pop();
+                                                var type = parsedWsdl.findDefinition(typeName);
+                                                outputHeaderDefinition = type
+                                                    ? type
+                                                    : parseDefinition(parsedWsdl, mergedOptions, typeName, headerMessage.parts, [typeName], visitedDefinitions);
+                                            }
+                                            else if (headerMessage.parts) {
+                                                var type = parsedWsdl.findDefinition(method.outputSoap.header.$name);
+                                                outputHeaderDefinition = type
+                                                    ? type
+                                                    : parseDefinition(parsedWsdl, mergedOptions, method.outputSoap.header.$name, headerMessage.parts, [method.outputSoap.header.$name], visitedDefinitions);
+                                            }
+                                            else {
+                                                logger_1.Logger.debug("Method '".concat(serviceName, ".").concat(portName, ".").concat(methodName, "' doesn't have any input header defined"));
+                                            }
+                                        }
                                         var outputMessage = wsdl.definitions.messages[method.output.$name];
                                         if (outputMessage.element) {
                                             // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
-                                            var typeName = (_c = outputMessage.element.$type) !== null && _c !== void 0 ? _c : outputMessage.element.$name;
+                                            var typeName = (_d = outputMessage.element.$type) !== null && _d !== void 0 ? _d : outputMessage.element.$name;
+                                            typeName.split(":").pop();
                                             var type = parsedWsdl.findDefinition(typeName);
                                             outputDefinition = type
                                                 ? type
@@ -377,8 +423,9 @@ function parseWsdl(wsdlPath, options) {
                                         var faultMessage = wsdl.definitions.messages[method.fault.$name];
                                         if (faultMessage.element) {
                                             // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
-                                            var typeName = (_d = faultMessage.element.$type) !== null && _d !== void 0 ? _d : faultMessage.element.$name;
-                                            var type = parsedWsdl.findDefinition((_e = faultMessage.element.$type) !== null && _e !== void 0 ? _e : faultMessage.element.$name);
+                                            var typeName = (_e = faultMessage.element.$type) !== null && _e !== void 0 ? _e : faultMessage.element.$name;
+                                            typeName.split(":").pop();
+                                            var type = parsedWsdl.findDefinition(typeName);
                                             faultDefinition = type
                                                 ? type
                                                 : parseDefinition(parsedWsdl, mergedOptions, typeName, faultMessage.parts, [typeName], visitedDefinitions);
@@ -401,6 +448,8 @@ function parseWsdl(wsdlPath, options) {
                                             : camelParamName,
                                         paramDefinition: inputDefinition,
                                         returnDefinition: outputDefinition,
+                                        inputHeaderDefinition: inputHeaderDefinition,
+                                        outputHeaderDefinition: outputHeaderDefinition,
                                         faultDefinition: faultDefinition,
                                     };
                                     portMethods.push(portMethod);

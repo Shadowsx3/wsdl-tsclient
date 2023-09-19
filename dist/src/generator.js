@@ -206,6 +206,22 @@ function generate(parsedWsdl, outDir, options) {
                             }
                             addSafeImport(portImports, "../definitions/".concat(method.returnDefinition.name), method.returnDefinition.name);
                         }
+                        if (method.inputHeaderDefinition !== null) {
+                            if (!allDefinitions.includes(method.inputHeaderDefinition)) {
+                                // Definition is not generated
+                                generateDefinitionFile(project, method.inputHeaderDefinition, defDir, [method.inputHeaderDefinition.name], allDefinitions, mergedOptions);
+                                addSafeImport(clientImports, "./definitions/".concat(method.inputHeaderDefinition.name), method.inputHeaderDefinition.name);
+                            }
+                            addSafeImport(portImports, "../definitions/".concat(method.inputHeaderDefinition.name), method.inputHeaderDefinition.name);
+                        }
+                        if (method.outputHeaderDefinition !== null) {
+                            if (!allDefinitions.includes(method.outputHeaderDefinition)) {
+                                // Definition is not generated
+                                generateDefinitionFile(project, method.outputHeaderDefinition, defDir, [method.outputHeaderDefinition.name], allDefinitions, mergedOptions);
+                                addSafeImport(clientImports, "./definitions/".concat(method.outputHeaderDefinition.name), method.outputHeaderDefinition.name);
+                            }
+                            addSafeImport(portImports, "../definitions/".concat(method.outputHeaderDefinition.name), method.outputHeaderDefinition.name);
+                        }
                         if (method.faultDefinition !== null) {
                             if (!allDefinitions.includes(method.faultDefinition)) {
                                 // Definition is not generated
@@ -225,7 +241,9 @@ function generate(parsedWsdl, outDir, options) {
                                 },
                                 {
                                     name: "callback",
-                                    type: "(err: any, result: ".concat(method.returnDefinition ? method.returnDefinition.name : "unknown", ", rawResponse: any, soapHeader: {[k: string]: any; }, rawRequest: any, mtomAttachments: any) => any"), // TODO: Use ts-morph to generate proper type
+                                    type: "(err: any, result: ".concat(method.returnDefinition ? method.returnDefinition.name : "unknown", ", rawResponse: any, soapHeader: ").concat(method.outputHeaderDefinition
+                                        ? method.outputHeaderDefinition.name
+                                        : "{[k: string]: any; }", ", rawRequest: any, mtomAttachments: any) => any"), // TODO: Use ts-morph to generate proper type
                                 },
                                 {
                                     name: "options",
@@ -234,7 +252,9 @@ function generate(parsedWsdl, outDir, options) {
                                 },
                                 {
                                     name: "extraHeaders",
-                                    type: "{[k: string]: any; }",
+                                    type: method.inputHeaderDefinition
+                                        ? method.inputHeaderDefinition.name
+                                        : "{[k: string]: any; }",
                                     hasQuestionToken: true,
                                 },
                             ],
@@ -315,11 +335,13 @@ function generate(parsedWsdl, outDir, options) {
                                 },
                                 {
                                     name: "extraHeaders",
-                                    type: "{[k: string]: any; }",
+                                    type: method.inputHeaderDefinition
+                                        ? method.inputHeaderDefinition.name
+                                        : "{[k: string]: any; }",
                                     hasQuestionToken: true,
                                 },
                             ],
-                            returnType: "Promise<[result: ".concat(method.returnDefinition ? method.returnDefinition.name : "unknown", ", rawResponse: any, soapHeader: {[k: string]: any; }, rawRequest: any, mtomAttachments: any]>"),
+                            returnType: "Promise<[result: ".concat(method.returnDefinition ? method.returnDefinition.name : "unknown", ", rawResponse: any, soapHeader: ").concat(method.outputHeaderDefinition ? method.outputHeaderDefinition.name : "{[k: string]: any; }", ", rawRequest: any, mtomAttachments: any]>"),
                         }); }),
                     },
                 ]);

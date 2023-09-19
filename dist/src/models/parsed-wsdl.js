@@ -32,7 +32,7 @@ var ParsedWsdl = /** @class */ (function () {
     }
     /** Find already parsed definition by it's name */
     ParsedWsdl.prototype.findDefinition = function (definitionName) {
-        return this.definitions.find(function (def) { return def.name === definitionName; });
+        return this.definitions.find(function (def) { return def.sourceName === definitionName; });
     };
     /**
      * To make every definition's name unique.

@@ -35,6 +35,10 @@ export interface Method {
     paramDefinition: null | Definition;
     /** Result type (OutputMessage) */
     returnDefinition: null | Definition;
+    /** First param header type (InputMessage) */
+    inputHeaderDefinition: null | Definition;
+    /** Result header type (OutputMessage) */
+    outputHeaderDefinition: null | Definition;
     /** Fault type (FaultMessage) */
     faultDefinition: null | Definition;
 }
