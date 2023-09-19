@@ -21,7 +21,7 @@ const defaultOptions: ParserOptions = {
 
 type VisitedDefinition = {
     name: string;
-    parts: object;
+    parts: object | string;
     definition: Definition;
 };
 
@@ -38,6 +38,7 @@ const getType = (type: string): string =>
         boolean: "boolean",
         dateTime: "Date",
         date: "Date",
+        anyType: "any",
     }[type.split(":").pop()] || "string");
 
 function findReferenceDefiniton(visited: Array<VisitedDefinition>, definitionParts: object) {
@@ -56,7 +57,7 @@ function parseDefinition(
     parsedWsdl: ParsedWsdl,
     options: ParserOptions,
     name: string,
-    defParts: { [propNameType: string]: any },
+    defParts: { [propNameType: string]: any } | string,
     stack: string[],
     visitedDefs: Array<VisitedDefinition>
 ): Definition {
@@ -85,8 +86,19 @@ function parseDefinition(
     parsedWsdl.definitions.push(definition); // Must be here to avoid name collision with `findNonCollisionDefinitionName` if sub-definition has same name
     visitedDefs.push({ name: definition.name, parts: defParts, definition }); // NOTE: cache reference to this defintion globally (for avoiding circular references)
     if (defParts) {
+        if (typeof defParts === "string") {
+            const newParts = defParts.split("|");
+            definition.properties.push({
+                kind: "PRIMITIVE",
+                name: definition.name,
+                sourceName: newParts[0],
+                description: defParts,
+                type: getType(newParts[1]),
+                isArray: false,
+            });
+        }
         // NOTE: `node-soap` has sometimes problem with parsing wsdl files, it includes `defParts.undefined = undefined`
-        if ("undefined" in defParts && defParts.undefined === undefined) {
+        else if ("undefined" in defParts && defParts.undefined === undefined) {
             // TODO: problem while parsing WSDL, maybe report to node-soap
             // TODO: add flag --FailOnWsdlError
             Logger.error({
@@ -134,7 +146,7 @@ function parseDefinition(
                             definition.properties.push({
                                 kind: "REFERENCE",
                                 name: stripedPropName,
-                                sourceName: type.typeName,
+                                sourceName: type.typeName ?? stripedPropName,
                                 ref: visited.definition,
                                 isArray: true,
                             });
@@ -143,7 +155,7 @@ function parseDefinition(
                                 const subDefinition = parseDefinition(
                                     parsedWsdl,
                                     options,
-                                    type.typeName,
+                                    type.typeName ?? stripedPropName,
                                     type,
                                     [...stack, propName],
                                     visitedDefs
@@ -151,7 +163,7 @@ function parseDefinition(
                                 definition.properties.push({
                                     kind: "REFERENCE",
                                     name: stripedPropName,
-                                    sourceName: type.typeName,
+                                    sourceName: type.typeName ?? stripedPropName,
                                     ref: subDefinition,
                                     isArray: true,
                                 });
@@ -194,7 +206,7 @@ function parseDefinition(
                             definition.properties.push({
                                 kind: "REFERENCE",
                                 name: propName,
-                                sourceName: type.typeName,
+                                sourceName: type.typeName ?? propName,
                                 description: "",
                                 ref: reference.definition,
                                 isArray: false,
@@ -204,7 +216,7 @@ function parseDefinition(
                                 const subDefinition = parseDefinition(
                                     parsedWsdl,
                                     options,
-                                    type.typeName,
+                                    type.typeName ?? propName,
                                     type,
                                     [...stack, propName],
                                     visitedDefs
@@ -212,7 +224,7 @@ function parseDefinition(
                                 definition.properties.push({
                                     kind: "REFERENCE",
                                     name: propName,
-                                    sourceName: type.typeName,
+                                    sourceName: type.typeName ?? propName,
                                     ref: subDefinition,
                                     isArray: false,
                                 });
@@ -292,8 +304,10 @@ export async function parseWsdl(wsdlPath: string, options: Partial<ParserOptions
                                     const headerMessage = wsdl.definitions.messages[method.inputSoap.header.$name];
                                     if (headerMessage.element) {
                                         // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
-                                        const typeName = headerMessage.element.$type ?? headerMessage.element.$name;
-                                        typeName.split(":").pop();
+                                        let typeName = headerMessage.element.$type ?? headerMessage.element.$name;
+                                        typeName = typeName.split(":").pop();
+                                        const simple = typeof headerMessage.parts === "string";
+                                        typeName = simple ? headerMessage.element.$name : typeName;
                                         const type = parsedWsdl.findDefinition(typeName);
                                         inputHeaderDefinition = type
                                             ? type
@@ -326,8 +340,10 @@ export async function parseWsdl(wsdlPath: string, options: Partial<ParserOptions
                                 const inputMessage = wsdl.definitions.messages[method.input.$name];
                                 if (inputMessage.element) {
                                     // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
-                                    const typeName = inputMessage.element.$type ?? inputMessage.element.$name;
-                                    typeName.split(":").pop();
+                                    let typeName = inputMessage.element.$type ?? inputMessage.element.$name;
+                                    typeName = typeName.split(":").pop();
+                                    const simple = typeof inputMessage.parts === "string";
+                                    typeName = simple ? inputMessage.element.$name : typeName;
                                     const type = parsedWsdl.findDefinition(typeName);
                                     inputDefinition = type
                                         ? type
@@ -365,8 +381,10 @@ export async function parseWsdl(wsdlPath: string, options: Partial<ParserOptions
                                     const headerMessage = wsdl.definitions.messages[method.outputSoap.header.$name];
                                     if (headerMessage.element) {
                                         // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
-                                        const typeName = headerMessage.element.$type ?? headerMessage.element.$name;
-                                        typeName.split(":").pop();
+                                        let typeName = headerMessage.element.$type ?? headerMessage.element.$name;
+                                        typeName = typeName.split(":").pop();
+                                        const simple = typeof headerMessage.parts === "string";
+                                        typeName = simple ? headerMessage.element.$name : typeName;
                                         const type = parsedWsdl.findDefinition(typeName);
                                         outputHeaderDefinition = type
                                             ? type
@@ -399,8 +417,10 @@ export async function parseWsdl(wsdlPath: string, options: Partial<ParserOptions
                                 const outputMessage = wsdl.definitions.messages[method.output.$name];
                                 if (outputMessage.element) {
                                     // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
-                                    const typeName = outputMessage.element.$type ?? outputMessage.element.$name;
-                                    typeName.split(":").pop();
+                                    let typeName = outputMessage.element.$type ?? outputMessage.element.$name;
+                                    typeName = typeName.split(":").pop();
+                                    const simple = typeof outputMessage.parts === "string";
+                                    typeName = simple ? outputMessage.element.$name : typeName;
                                     const type = parsedWsdl.findDefinition(typeName);
                                     outputDefinition = type
                                         ? type
@@ -432,8 +452,10 @@ export async function parseWsdl(wsdlPath: string, options: Partial<ParserOptions
                                 const faultMessage = wsdl.definitions.messages[method.fault.$name];
                                 if (faultMessage.element) {
                                     // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
-                                    const typeName = faultMessage.element.$type ?? faultMessage.element.$name;
-                                    typeName.split(":").pop();
+                                    let typeName = faultMessage.element.$type ?? faultMessage.element.$name;
+                                    typeName = typeName.split(":").pop();
+                                    const simple = typeof faultMessage.parts === "string";
+                                    typeName = simple ? faultMessage.element.$name : typeName;
                                     const type = parsedWsdl.findDefinition(typeName);
                                     faultDefinition = type
                                         ? type

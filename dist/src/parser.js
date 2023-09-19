@@ -106,6 +106,7 @@ var getType = function (type) {
         boolean: "boolean",
         dateTime: "Date",
         date: "Date",
+        anyType: "any",
     }[type.split(":").pop()] || "string");
 };
 function findReferenceDefiniton(visited, definitionParts) {
@@ -141,8 +142,19 @@ function parseDefinition(parsedWsdl, options, name, defParts, stack, visitedDefs
     parsedWsdl.definitions.push(definition); // Must be here to avoid name collision with `findNonCollisionDefinitionName` if sub-definition has same name
     visitedDefs.push({ name: definition.name, parts: defParts, definition: definition }); // NOTE: cache reference to this defintion globally (for avoiding circular references)
     if (defParts) {
+        if (typeof defParts === "string") {
+            var newParts = defParts.split("|");
+            definition.properties.push({
+                kind: "PRIMITIVE",
+                name: definition.name,
+                sourceName: newParts[0],
+                description: defParts,
+                type: getType(newParts[1]),
+                isArray: false,
+            });
+        }
         // NOTE: `node-soap` has sometimes problem with parsing wsdl files, it includes `defParts.undefined = undefined`
-        if ("undefined" in defParts && defParts.undefined === undefined) {
+        else if ("undefined" in defParts && defParts.undefined === undefined) {
             // TODO: problem while parsing WSDL, maybe report to node-soap
             // TODO: add flag --FailOnWsdlError
             logger_1.Logger.error({
@@ -153,6 +165,7 @@ function parseDefinition(parsedWsdl, options, name, defParts, stack, visitedDefs
         }
         else {
             Object.entries(defParts).forEach(function (_a) {
+                var _b, _c, _d, _e, _f, _g;
                 var propName = _a[0], type = _a[1];
                 if (propName === "targetNSAlias") {
                     definition.docs.push("@targetNSAlias `".concat(type, "`"));
@@ -197,18 +210,18 @@ function parseDefinition(parsedWsdl, options, name, defParts, stack, visitedDefs
                             definition.properties.push({
                                 kind: "REFERENCE",
                                 name: stripedPropName,
-                                sourceName: type.typeName,
+                                sourceName: (_b = type.typeName) !== null && _b !== void 0 ? _b : stripedPropName,
                                 ref: visited.definition,
                                 isArray: true,
                             });
                         }
                         else {
                             try {
-                                var subDefinition = parseDefinition(parsedWsdl, options, type.typeName, type, __spreadArray(__spreadArray([], stack, true), [propName], false), visitedDefs);
+                                var subDefinition = parseDefinition(parsedWsdl, options, (_c = type.typeName) !== null && _c !== void 0 ? _c : stripedPropName, type, __spreadArray(__spreadArray([], stack, true), [propName], false), visitedDefs);
                                 definition.properties.push({
                                     kind: "REFERENCE",
                                     name: stripedPropName,
-                                    sourceName: type.typeName,
+                                    sourceName: (_d = type.typeName) !== null && _d !== void 0 ? _d : stripedPropName,
                                     ref: subDefinition,
                                     isArray: true,
                                 });
@@ -253,7 +266,7 @@ function parseDefinition(parsedWsdl, options, name, defParts, stack, visitedDefs
                             definition.properties.push({
                                 kind: "REFERENCE",
                                 name: propName,
-                                sourceName: type.typeName,
+                                sourceName: (_e = type.typeName) !== null && _e !== void 0 ? _e : propName,
                                 description: "",
                                 ref: reference.definition,
                                 isArray: false,
@@ -261,11 +274,11 @@ function parseDefinition(parsedWsdl, options, name, defParts, stack, visitedDefs
                         }
                         else {
                             try {
-                                var subDefinition = parseDefinition(parsedWsdl, options, type.typeName, type, __spreadArray(__spreadArray([], stack, true), [propName], false), visitedDefs);
+                                var subDefinition = parseDefinition(parsedWsdl, options, (_f = type.typeName) !== null && _f !== void 0 ? _f : propName, type, __spreadArray(__spreadArray([], stack, true), [propName], false), visitedDefs);
                                 definition.properties.push({
                                     kind: "REFERENCE",
                                     name: propName,
-                                    sourceName: type.typeName,
+                                    sourceName: (_g = type.typeName) !== null && _g !== void 0 ? _g : propName,
                                     ref: subDefinition,
                                     isArray: false,
                                 });
@@ -341,7 +354,9 @@ function parseWsdl(wsdlPath, options) {
                                             if (headerMessage.element) {
                                                 // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
                                                 var typeName = (_a = headerMessage.element.$type) !== null && _a !== void 0 ? _a : headerMessage.element.$name;
-                                                typeName.split(":").pop();
+                                                typeName = typeName.split(":").pop();
+                                                var simple = typeof headerMessage.parts === "string";
+                                                typeName = simple ? headerMessage.element.$name : typeName;
                                                 var type = parsedWsdl.findDefinition(typeName);
                                                 inputHeaderDefinition = type
                                                     ? type
@@ -361,7 +376,9 @@ function parseWsdl(wsdlPath, options) {
                                         if (inputMessage.element) {
                                             // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
                                             var typeName = (_b = inputMessage.element.$type) !== null && _b !== void 0 ? _b : inputMessage.element.$name;
-                                            typeName.split(":").pop();
+                                            typeName = typeName.split(":").pop();
+                                            var simple = typeof inputMessage.parts === "string";
+                                            typeName = simple ? inputMessage.element.$name : typeName;
                                             var type = parsedWsdl.findDefinition(typeName);
                                             inputDefinition = type
                                                 ? type
@@ -385,7 +402,9 @@ function parseWsdl(wsdlPath, options) {
                                             if (headerMessage.element) {
                                                 // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
                                                 var typeName = (_c = headerMessage.element.$type) !== null && _c !== void 0 ? _c : headerMessage.element.$name;
-                                                typeName.split(":").pop();
+                                                typeName = typeName.split(":").pop();
+                                                var simple = typeof headerMessage.parts === "string";
+                                                typeName = simple ? headerMessage.element.$name : typeName;
                                                 var type = parsedWsdl.findDefinition(typeName);
                                                 outputHeaderDefinition = type
                                                     ? type
@@ -405,7 +424,9 @@ function parseWsdl(wsdlPath, options) {
                                         if (outputMessage.element) {
                                             // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
                                             var typeName = (_d = outputMessage.element.$type) !== null && _d !== void 0 ? _d : outputMessage.element.$name;
-                                            typeName.split(":").pop();
+                                            typeName = typeName.split(":").pop();
+                                            var simple = typeof outputMessage.parts === "string";
+                                            typeName = simple ? outputMessage.element.$name : typeName;
                                             var type = parsedWsdl.findDefinition(typeName);
                                             outputDefinition = type
                                                 ? type
@@ -424,7 +445,9 @@ function parseWsdl(wsdlPath, options) {
                                         if (faultMessage.element) {
                                             // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
                                             var typeName = (_e = faultMessage.element.$type) !== null && _e !== void 0 ? _e : faultMessage.element.$name;
-                                            typeName.split(":").pop();
+                                            typeName = typeName.split(":").pop();
+                                            var simple = typeof faultMessage.parts === "string";
+                                            typeName = simple ? faultMessage.element.$name : typeName;
                                             var type = parsedWsdl.findDefinition(typeName);
                                             faultDefinition = type
                                                 ? type
