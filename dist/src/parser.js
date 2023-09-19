@@ -183,7 +183,7 @@ function parseDefinition(parsedWsdl, options, name, defParts, stack, visitedDefs
                             kind: "PRIMITIVE",
                             name: stripedPropName,
                             sourceName: propName,
-                            description: "ComplexType are not supported yet",
+                            description: "".concat(type.$name, " - ComplexType are not supported yet"),
                             type: "any",
                             isArray: true,
                         });
@@ -239,7 +239,7 @@ function parseDefinition(parsedWsdl, options, name, defParts, stack, visitedDefs
                             kind: "PRIMITIVE",
                             name: propName,
                             sourceName: propName,
-                            description: "ComplexType are not supported yet",
+                            description: "".concat(type.$name, " - ComplexType are not supported yet"),
                             type: "any",
                             isArray: false,
                         });
@@ -366,17 +366,14 @@ function parseWsdl(wsdlPath, options) {
                                                 : parseDefinition(parsedWsdl, mergedOptions, typeName, outputMessage.parts, [typeName], visitedDefinitions);
                                         }
                                         else {
-                                            var type = parsedWsdl.findDefinition(paramName);
+                                            var type = parsedWsdl.findDefinition(method.output.$name);
                                             outputDefinition = type
                                                 ? type
-                                                : parseDefinition(parsedWsdl, mergedOptions, paramName, outputMessage.parts, [paramName], visitedDefinitions);
+                                                : parseDefinition(parsedWsdl, mergedOptions, method.output.$name, outputMessage.parts, [method.output.$name], visitedDefinitions);
                                         }
                                     }
                                     var faultDefinition = null; // default type
                                     if (method.fault) {
-                                        if (method.fault.$name) {
-                                            paramName = method.fault.$name;
-                                        }
                                         var faultMessage = wsdl.definitions.messages[method.fault.$name];
                                         if (faultMessage.element) {
                                             // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
@@ -387,10 +384,10 @@ function parseWsdl(wsdlPath, options) {
                                                 : parseDefinition(parsedWsdl, mergedOptions, typeName, faultMessage.parts, [typeName], visitedDefinitions);
                                         }
                                         else if (faultMessage.parts) {
-                                            var type = parsedWsdl.findDefinition(paramName);
+                                            var type = parsedWsdl.findDefinition(method.fault.$name);
                                             faultDefinition = type
                                                 ? type
-                                                : parseDefinition(parsedWsdl, mergedOptions, paramName, faultMessage.parts, [paramName], visitedDefinitions);
+                                                : parseDefinition(parsedWsdl, mergedOptions, method.fault.$name, faultMessage.parts, [method.fault.$name], visitedDefinitions);
                                         }
                                         else {
                                             logger_1.Logger.debug("Method '".concat(serviceName, ".").concat(portName, ".").concat(methodName, "' doesn't have any fault defined"));

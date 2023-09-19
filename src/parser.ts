@@ -121,7 +121,7 @@ function parseDefinition(
                             kind: "PRIMITIVE",
                             name: stripedPropName,
                             sourceName: propName,
-                            description: "ComplexType are not supported yet",
+                            description: `${type.$name} - ComplexType are not supported yet`,
                             type: "any",
                             isArray: true,
                         });
@@ -181,7 +181,7 @@ function parseDefinition(
                             kind: "PRIMITIVE",
                             name: propName,
                             sourceName: propName,
-                            description: "ComplexType are not supported yet",
+                            description: `${type.$name} - ComplexType are not supported yet`,
                             type: "any",
                             isArray: false,
                         });
@@ -341,15 +341,15 @@ export async function parseWsdl(wsdlPath: string, options: Partial<ParserOptions
                                               visitedDefinitions
                                           );
                                 } else {
-                                    const type = parsedWsdl.findDefinition(paramName);
+                                    const type = parsedWsdl.findDefinition(method.output.$name);
                                     outputDefinition = type
                                         ? type
                                         : parseDefinition(
                                               parsedWsdl,
                                               mergedOptions,
-                                              paramName,
+                                              method.output.$name,
                                               outputMessage.parts,
-                                              [paramName],
+                                              [method.output.$name],
                                               visitedDefinitions
                                           );
                                 }
@@ -357,9 +357,6 @@ export async function parseWsdl(wsdlPath: string, options: Partial<ParserOptions
 
                             let faultDefinition: Definition = null; // default type
                             if (method.fault) {
-                                if (method.fault.$name) {
-                                    paramName = method.fault.$name;
-                                }
                                 const faultMessage = wsdl.definitions.messages[method.fault.$name];
                                 if (faultMessage.element) {
                                     // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
@@ -378,15 +375,15 @@ export async function parseWsdl(wsdlPath: string, options: Partial<ParserOptions
                                               visitedDefinitions
                                           );
                                 } else if (faultMessage.parts) {
-                                    const type = parsedWsdl.findDefinition(paramName);
+                                    const type = parsedWsdl.findDefinition(method.fault.$name);
                                     faultDefinition = type
                                         ? type
                                         : parseDefinition(
                                               parsedWsdl,
                                               mergedOptions,
-                                              paramName,
+                                              method.fault.$name,
                                               faultMessage.parts,
-                                              [paramName],
+                                              [method.fault.$name],
                                               visitedDefinitions
                                           );
                                 } else {
