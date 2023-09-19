@@ -217,6 +217,29 @@ export async function generate(
                         method.returnDefinition.name
                     );
                 }
+                if (method.faultDefinition !== null) {
+                    if (!allDefinitions.includes(method.faultDefinition)) {
+                        // Definition is not generated
+                        generateDefinitionFile(
+                            project,
+                            method.faultDefinition,
+                            defDir,
+                            [method.faultDefinition.name],
+                            allDefinitions,
+                            mergedOptions
+                        );
+                        addSafeImport(
+                            clientImports,
+                            `./definitions/${method.faultDefinition.name}`,
+                            method.faultDefinition.name
+                        );
+                    }
+                    addSafeImport(
+                        portImports,
+                        `../definitions/${method.faultDefinition.name}`,
+                        method.faultDefinition.name
+                    );
+                }
                 // TODO: Deduplicate PortMethods
                 allMethods.push(method);
                 portFileMethods.push({

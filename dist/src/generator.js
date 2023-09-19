@@ -206,6 +206,14 @@ function generate(parsedWsdl, outDir, options) {
                             }
                             addSafeImport(portImports, "../definitions/".concat(method.returnDefinition.name), method.returnDefinition.name);
                         }
+                        if (method.faultDefinition !== null) {
+                            if (!allDefinitions.includes(method.faultDefinition)) {
+                                // Definition is not generated
+                                generateDefinitionFile(project, method.faultDefinition, defDir, [method.faultDefinition.name], allDefinitions, mergedOptions);
+                                addSafeImport(clientImports, "./definitions/".concat(method.faultDefinition.name), method.faultDefinition.name);
+                            }
+                            addSafeImport(portImports, "../definitions/".concat(method.faultDefinition.name), method.faultDefinition.name);
+                        }
                         // TODO: Deduplicate PortMethods
                         allMethods.push(method);
                         portFileMethods.push({

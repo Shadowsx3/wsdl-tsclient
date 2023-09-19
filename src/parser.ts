@@ -355,6 +355,47 @@ export async function parseWsdl(wsdlPath: string, options: Partial<ParserOptions
                                 }
                             }
 
+                            let faultDefinition: Definition = null; // default type
+                            if (method.fault) {
+                                if (method.fault.$name) {
+                                    paramName = method.fault.$name;
+                                }
+                                const faultMessage = wsdl.definitions.messages[method.fault.$name];
+                                if (faultMessage.element) {
+                                    // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
+                                    const typeName = faultMessage.element.$type ?? faultMessage.element.$name;
+                                    const type = parsedWsdl.findDefinition(
+                                        faultMessage.element.$type ?? faultMessage.element.$name
+                                    );
+                                    faultDefinition = type
+                                        ? type
+                                        : parseDefinition(
+                                              parsedWsdl,
+                                              mergedOptions,
+                                              typeName,
+                                              faultMessage.parts,
+                                              [typeName],
+                                              visitedDefinitions
+                                          );
+                                } else if (faultMessage.parts) {
+                                    const type = parsedWsdl.findDefinition(paramName);
+                                    faultDefinition = type
+                                        ? type
+                                        : parseDefinition(
+                                              parsedWsdl,
+                                              mergedOptions,
+                                              paramName,
+                                              faultMessage.parts,
+                                              [paramName],
+                                              visitedDefinitions
+                                          );
+                                } else {
+                                    Logger.debug(
+                                        `Method '${serviceName}.${portName}.${methodName}' doesn't have any fault defined`
+                                    );
+                                }
+                            }
+
                             const camelParamName = changeCase(paramName);
                             const portMethod: Method = {
                                 name: methodName,
@@ -363,6 +404,7 @@ export async function parseWsdl(wsdlPath: string, options: Partial<ParserOptions
                                     : camelParamName,
                                 paramDefinition: inputDefinition, // TODO: Use string from generated definition files
                                 returnDefinition: outputDefinition, // TODO: Use string from generated definition files
+                                faultDefinition,
                             };
                             portMethods.push(portMethod);
                             allMethods.push(portMethod);

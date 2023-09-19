@@ -299,7 +299,7 @@ function parseWsdl(wsdlPath, options) {
             mergedOptions = __assign(__assign({}, defaultOptions), options);
             return [2 /*return*/, new Promise(function (resolve, reject) {
                     (0, index_1.open_wsdl)(wsdlPath, { namespaceArrayElements: false, ignoredNamespaces: ["tns", "targetNamespace", "typeNamespace"] }, function (err, wsdl) {
-                        var _a, _b, _c;
+                        var _a, _b, _c, _d, _e;
                         if (err) {
                             return reject(err);
                         }
@@ -317,16 +317,16 @@ function parseWsdl(wsdlPath, options) {
                         var allMethods = [];
                         var allPorts = [];
                         var services = [];
-                        for (var _i = 0, _d = Object.entries(wsdl.definitions.services); _i < _d.length; _i++) {
-                            var _e = _d[_i], serviceName = _e[0], service = _e[1];
+                        for (var _i = 0, _f = Object.entries(wsdl.definitions.services); _i < _f.length; _i++) {
+                            var _g = _f[_i], serviceName = _g[0], service = _g[1];
                             logger_1.Logger.debug("Parsing Service ".concat(serviceName));
                             var servicePorts = []; // TODO: Convert to Array
-                            for (var _f = 0, _g = Object.entries(service.ports); _f < _g.length; _f++) {
-                                var _h = _g[_f], portName = _h[0], port = _h[1];
+                            for (var _h = 0, _j = Object.entries(service.ports); _h < _j.length; _h++) {
+                                var _k = _j[_h], portName = _k[0], port = _k[1];
                                 logger_1.Logger.debug("Parsing Port ".concat(portName));
                                 var portMethods = [];
-                                for (var _j = 0, _k = Object.entries(port.binding.methods); _j < _k.length; _j++) {
-                                    var _l = _k[_j], methodName = _l[0], method = _l[1];
+                                for (var _l = 0, _m = Object.entries(port.binding.methods); _l < _m.length; _l++) {
+                                    var _o = _m[_l], methodName = _o[0], method = _o[1];
                                     logger_1.Logger.debug("Parsing Method ".concat(methodName));
                                     // TODO: Deduplicate code below by refactoring it to external function. Is it even possible ?
                                     var paramName = "request";
@@ -372,6 +372,30 @@ function parseWsdl(wsdlPath, options) {
                                                 : parseDefinition(parsedWsdl, mergedOptions, paramName, outputMessage.parts, [paramName], visitedDefinitions);
                                         }
                                     }
+                                    var faultDefinition = null; // default type
+                                    if (method.fault) {
+                                        if (method.fault.$name) {
+                                            paramName = method.fault.$name;
+                                        }
+                                        var faultMessage = wsdl.definitions.messages[method.fault.$name];
+                                        if (faultMessage.element) {
+                                            // TODO: if `$type` not defined, inline type into function declartion (do not create definition file) - wsimport
+                                            var typeName = (_d = faultMessage.element.$type) !== null && _d !== void 0 ? _d : faultMessage.element.$name;
+                                            var type = parsedWsdl.findDefinition((_e = faultMessage.element.$type) !== null && _e !== void 0 ? _e : faultMessage.element.$name);
+                                            faultDefinition = type
+                                                ? type
+                                                : parseDefinition(parsedWsdl, mergedOptions, typeName, faultMessage.parts, [typeName], visitedDefinitions);
+                                        }
+                                        else if (faultMessage.parts) {
+                                            var type = parsedWsdl.findDefinition(paramName);
+                                            faultDefinition = type
+                                                ? type
+                                                : parseDefinition(parsedWsdl, mergedOptions, paramName, faultMessage.parts, [paramName], visitedDefinitions);
+                                        }
+                                        else {
+                                            logger_1.Logger.debug("Method '".concat(serviceName, ".").concat(portName, ".").concat(methodName, "' doesn't have any fault defined"));
+                                        }
+                                    }
                                     var camelParamName = (0, change_case_1.changeCase)(paramName);
                                     var portMethod = {
                                         name: methodName,
@@ -379,7 +403,8 @@ function parseWsdl(wsdlPath, options) {
                                             ? "".concat(camelParamName, "Param")
                                             : camelParamName,
                                         paramDefinition: inputDefinition,
-                                        returnDefinition: outputDefinition, // TODO: Use string from generated definition files
+                                        returnDefinition: outputDefinition,
+                                        faultDefinition: faultDefinition,
                                     };
                                     portMethods.push(portMethod);
                                     allMethods.push(portMethod);

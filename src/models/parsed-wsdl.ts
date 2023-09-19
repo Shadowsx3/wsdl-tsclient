@@ -42,6 +42,8 @@ export interface Method {
     paramDefinition: null | Definition;
     /** Result type (OutputMessage) */
     returnDefinition: null | Definition;
+    /** Fault type (FaultMessage) */
+    faultDefinition: null | Definition;
 }
 
 export interface Port {
