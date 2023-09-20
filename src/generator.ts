@@ -389,7 +389,7 @@ export async function generate(
                     parameters: [
                         {
                             name: camelcase(method.paramName),
-                            type: method.paramDefinition ? method.paramDefinition.name : "{}",
+                            type: method.paramDefinition ? method.paramDefinition.name : "any",
                         },
                         {
                             name: "options",
@@ -405,7 +405,7 @@ export async function generate(
                         },
                     ],
                     returnType: `Promise<[result: ${
-                        method.returnDefinition ? method.returnDefinition.name : "unknown"
+                        method.returnDefinition ? method.returnDefinition.name : "any"
                     }, rawResponse: any, soapHeader: ${
                         method.outputHeaderDefinition ? method.outputHeaderDefinition.name : "{[k: string]: any; }"
                     }, rawRequest: any, mtomAttachments: any]>`,

@@ -326,7 +326,7 @@ function generate(parsedWsdl, outDir, options) {
                             parameters: [
                                 {
                                     name: (0, camelcase_1.default)(method.paramName),
-                                    type: method.paramDefinition ? method.paramDefinition.name : "{}",
+                                    type: method.paramDefinition ? method.paramDefinition.name : "any",
                                 },
                                 {
                                     name: "options",
@@ -341,7 +341,7 @@ function generate(parsedWsdl, outDir, options) {
                                     hasQuestionToken: true,
                                 },
                             ],
-                            returnType: "Promise<[result: ".concat(method.returnDefinition ? method.returnDefinition.name : "unknown", ", rawResponse: any, soapHeader: ").concat(method.outputHeaderDefinition ? method.outputHeaderDefinition.name : "{[k: string]: any; }", ", rawRequest: any, mtomAttachments: any]>"),
+                            returnType: "Promise<[result: ".concat(method.returnDefinition ? method.returnDefinition.name : "any", ", rawResponse: any, soapHeader: ").concat(method.outputHeaderDefinition ? method.outputHeaderDefinition.name : "{[k: string]: any; }", ", rawRequest: any, mtomAttachments: any]>"),
                         }); }),
                     },
                 ]);
