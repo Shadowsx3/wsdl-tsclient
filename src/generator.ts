@@ -293,17 +293,17 @@ export async function generate(
                     parameters: [
                         {
                             name: camelcase(method.paramName),
-                            type: method.paramDefinition ? method.paramDefinition.name : "{}",
+                            type: method.paramDefinition ? method.paramDefinition.name : "any",
                         },
                         {
                             name: "callback",
                             type: `(err: any, result: ${
-                                method.returnDefinition ? method.returnDefinition.name : "unknown"
-                            }, rawResponse: any, soapHeader: ${
+                                method.returnDefinition ? method.returnDefinition.name : "any"
+                            }, soapHeader: ${
                                 method.outputHeaderDefinition
                                     ? method.outputHeaderDefinition.name
                                     : "{[k: string]: any; }"
-                            }, rawRequest: any, mtomAttachments: any) => any`, // TODO: Use ts-morph to generate proper type
+                            }, httpHeader: any, soapResponse: any, rawResponse: any, rawRequest: any, mtomAttachments: any) => any`, // TODO: Use ts-morph to generate proper type
                         },
                         {
                             name: "options",
@@ -404,11 +404,11 @@ export async function generate(
                             hasQuestionToken: true,
                         },
                     ],
-                    returnType: `Promise<[result: ${
+                    returnType: `Promise<{err: any, result: ${
                         method.returnDefinition ? method.returnDefinition.name : "any"
-                    }, rawResponse: any, soapHeader: ${
+                    }, soapHeader: ${
                         method.outputHeaderDefinition ? method.outputHeaderDefinition.name : "{[k: string]: any; }"
-                    }, rawRequest: any, mtomAttachments: any]>`,
+                    }, httpHeader: any, soapResponse: any, rawResponse: any, rawRequest: any, mtomAttachments: any}>`,
                 })),
             },
         ]);
