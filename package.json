@@ -1,6 +1,6 @@
 {
-  "name": "wsdl-two-ts",
-  "version": "1.0.0",
+  "name": "wsdl4ts",
+  "version": "1.0.2",
   "description": "Generate typescript soap client with typescript definitons from WSDL file.",
   "main": "dist/src/index.js",
   "bin": {
@@ -16,7 +16,6 @@
     "test:node-soap2": "ts-node node_modules/tape/bin/tape ./test/node-soap/**/*.test.ts | tap-spec",
     "test:public": "ts-node node_modules/tape/bin/tape ./test/resources-public/**/*.test.ts | tap-spec",
     "preversion": "npm test && npm run build",
-    "prepublishOnly": "npm test && npm run dist",
     "dev": "ts-node -T ./dev.ts",
     "dist": "tsc",
     "build": "tsc",
@@ -25,7 +24,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dderevjanik/wsdl-tsclient.git"
+    "url": "git+https://github:Shadowsx3/wsdl-tsclient.git"
   },
   "keywords": [
     "soap",
@@ -37,9 +36,9 @@
   "author": "Manuel Buslon",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/dderevjanik/wsdl-tsclient/issues"
+    "url": "https://github:Shadowsx3/wsdl-tsclient/issues"
   },
-  "homepage": "https://github.com/dderevjanik/wsdl-tsclient#readme",
+  "homepage": "https://github:Shadowsx3/wsdl-tsclient#readme",
   "devDependencies": {
     "prettier": "^2.6.2",
     "tap-spec": "^5.0.0",
@@ -60,7 +59,7 @@
     "eslint-plugin-prettier": "^4.0.0",
     "glob": "^10.3.4",
     "sanitize-filename": "^1.6.3",
-    "soap": "github:Shadowsx3/node-soap",
+    "soap4test": "^1.0.0",
     "supports-color": "^8.1.1",
     "ts-morph": "^19.0.0",
     "yargs": "^16.2.0"

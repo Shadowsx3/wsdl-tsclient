@@ -1,6 +1,6 @@
 import * as path from "path";
-import { ComplexTypeElement } from "soap/lib/wsdl/elements";
-import { open_wsdl } from "soap/lib/wsdl/index";
+import { ComplexTypeElement } from "soap4test/lib/wsdl/elements";
+import { open_wsdl } from "soap4test/lib/wsdl/index";
 import { Definition, Method, ParsedWsdl, Port, Service } from "./models/parsed-wsdl";
 import { changeCase } from "./utils/change-case";
 import { stripExtension } from "./utils/file";

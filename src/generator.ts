@@ -368,9 +368,9 @@ export async function generate(
             overwrite: true,
         });
         clientFile.addImportDeclaration({
-            moduleSpecifier: "soap",
+            moduleSpecifier: "soap4test",
             namedImports: [
-                { name: "Client", alias: "SoapClient" },
+                { name: "Client", alias: "soapClient" },
                 { name: "createClientAsync", alias: "soapCreateClientAsync" },
             ],
         });
@@ -383,7 +383,7 @@ export async function generate(
                 // docs: [`${parsedWsdl.name}Client`],
                 name: `${parsedWsdl.name}Client`,
                 properties: clientServices,
-                extends: ["SoapClient"],
+                extends: ["soapClient"],
                 methods: allMethods.map<OptionalKind<MethodSignatureStructure>>((method) => ({
                     name: sanitizePropName(`${method.name}Async`),
                     parameters: [

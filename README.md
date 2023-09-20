@@ -1,8 +1,8 @@
 # WSDL Two TS
 
-Forked from author:
+> Temporary fork to include more request and response information in the client callback. In addition, the client parses the objects by class and not by name.
 
-Daniel Derevjanik <daniel.derevjanik@gmail.com>
+> The original author is Daniel Derevjanik <daniel.derevjanik@gmail.com>
 
 [![travis-status](https://travis-ci.org/dderevjanik/wsdl-tsclient.svg?branch=master)](https://travis-ci.org/dderevjanik/wsdl-tsclient)
 ![license](https://img.shields.io/npm/l/wsdl-tsclient)
@@ -92,7 +92,7 @@ client.CallSoapMethodAsync();
 Setting basic auth 
 
 ```typescript
-import soap from "soap";
+import soap from "soap4test";
 import { createClientAsync } from "./generated/MyWsdl";
 
 const client = await createClientAsync("./path/to/wsdl.wsdl");
