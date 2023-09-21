@@ -1,6 +1,6 @@
 {
   "name": "wsdl4ts",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "description": "Generate typescript soap client with typescript definitons from WSDL file.",
   "main": "dist/src/index.js",
   "bin": {
